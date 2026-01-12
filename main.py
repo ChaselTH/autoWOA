@@ -74,6 +74,10 @@ OCR_SCALE = 10
 OCR_CONTRAST = 1.6
 OCR_SHARPNESS = 1.2
 OCR_INVERT = False
+
+#add crew drag
+DRAG_1: Point = (1004,756)
+DRAG_2: Point = (1123,761)
 # =========================
 
 
@@ -108,11 +112,20 @@ def c(p: Point) -> str:
 def w(ms: int) -> str:
     return f"w:{ms}"
 
+def dd(p: Point):
+    return f"dd:{p[0], p[1]}"
+
+def dm(p: Point):
+    return f"dm:{p[0], p[1]}"
+
+def du(p: Point):
+    return f"du:{p[0], p[1]}"
+
 def drag(from_p: Point, to_p: Point) -> List[str]:
     return [
         f"dd:{from_p[0]},{from_p[1]}",
         f"w:{GAP_MS}",
-        f"m:{to_p[0]},{to_p[1]}",
+        f"dm:{to_p[0]},{to_p[1]}",
         f"w:{GAP_MS}",
         f"du:{to_p[0]},{to_p[1]}",
     ]
@@ -138,9 +151,11 @@ def slow_drag(from_p: Point, to_p: Point, steps: int = 16, hold_ms: int = 180, s
     ops.append(f"du:{tx},{ty}")
     return ops
 
-def add_crew(num):
-    for _ in range(num):
-        run_cliclick(c(ADD_BTN), w(1))
+def add_crew():
+    run_cliclick(*drag(DRAG_1, DRAG_2))
+    # run_cliclick(dd(DRAG_1), w(GAP_MS), dm(DRAG_2), w(GAP_MS), du(DRAG_2), w(GAP_MS))
+    # for _ in range(num):
+    #     run_cliclick(c(ADD_BTN), w(1))
 
 
 
@@ -413,7 +428,7 @@ def handling():
             return
 
         run_cliclick(c(START_POINT), w(GAP_MS), c(CONFIRM), w(1000), c(CAILM), w(1500), c(CONFIRM), w(GAP_MS))
-        add_crew(20)
+        add_crew()
         ops = []
         # ops += slow_drag(SLIDER_FROM, SLIDER_TO, steps=16, hold_ms=180, step_ms=45)
         ops += [c(A3_AFTER_1), w(GAP_MS), c(CONFIRM)]
