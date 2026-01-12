@@ -11,6 +11,8 @@ cliclick 自动化 + 第三步 Vision OCR gate（你已验证成功的方案）
 from typing import Tuple
 Point = Tuple[int, int]
 
+USE_TOWER = True
+
 CAILM: Point = (1061,790)
 
 SELECT_1: Point = (1405, 633)
@@ -25,6 +27,9 @@ ADD_BTN: Point = (1133, 759)
 
 # 三种方式共同的第一个点击点
 START_POINT: Point = (1350, 605)
+SECOND_POINT: Point = (1348,649)
+THIRD_POINT: Point = (1355,688)
+FORTH_POINT: Point = (1353,724)
 
 CONFIRM: Point = (871, 861)
 
@@ -410,8 +415,10 @@ def approach(skip):
 def handling():
     print("CHECK HANDLING...")
     global STOP
-    run_cliclick(c(SELECT_2),w(GAP_MS))
+    if not USE_TOWER:
+        run_cliclick(c(SELECT_2),w(GAP_MS))
     while checkDone(OCR_2_TL, OCR_2_BR):
+        chooseStrat = START_POINT
         print("HANDLING...")
         if STOP:
             print("Stopped.")
@@ -427,7 +434,7 @@ def handling():
             print("[action3] gate not passed:", last)
             return
 
-        run_cliclick(c(START_POINT), w(GAP_MS), c(CONFIRM), w(1000), c(CAILM), w(1500), c(CONFIRM), w(GAP_MS))
+        run_cliclick(c(chooseStrat), w(GAP_MS), c(CONFIRM), w(1000), c(CAILM), w(1500), c(CONFIRM), w(GAP_MS))
         add_crew()
         ops = []
         # ops += slow_drag(SLIDER_FROM, SLIDER_TO, steps=16, hold_ms=180, step_ms=45)
@@ -476,6 +483,17 @@ def main():
     start_global_stop_by_esc()
 
     run_cliclick(c(TAP_WINDOW))
+
+    if USE_TOWER:
+        try:
+            while not STOP:
+                handling()
+                if STOP:
+                    print("Stopped.")
+                    break
+        except KeyboardInterrupt:
+            print("Stopped.")
+
     try:
         while not STOP:
             # check = checkSkip()
