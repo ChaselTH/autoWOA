@@ -26,6 +26,7 @@ FILTER_3: Point = (1409, 694)
 ADD_BTN: Point = (1133, 759)
 
 # 三种方式共同的第一个点击点
+SELECT_LIMIT = 3
 START_POINT: Point = (1350, 605)
 SECOND_POINT: Point = (1348,649)
 THIRD_POINT: Point = (1355,688)
@@ -63,7 +64,7 @@ SLIDER_TO: Point = (1116, 758)
 A3_AFTER_1: Point = (1134, 790)
 
 # gate 规则：当 right - left > 20 才执行第三步后续动作
-GATE_DELTA = 11
+GATE_DELTA = 21
 
 # 节奏参数（毫秒）
 GAP_MS = 200                 # 同一步内部点击间隔（cliclick 的 w:）
@@ -133,6 +134,7 @@ def drag(from_p: Point, to_p: Point) -> List[str]:
         f"dm:{to_p[0]},{to_p[1]}",
         f"w:{GAP_MS}",
         f"du:{to_p[0]},{to_p[1]}",
+        f"w:{GAP_MS}"
     ]
 
 def slow_drag(from_p: Point, to_p: Point, steps: int = 16, hold_ms: int = 180, step_ms: int = 45) -> List[str]:
@@ -417,8 +419,32 @@ def handling():
     global STOP
     if not USE_TOWER:
         run_cliclick(c(SELECT_2),w(GAP_MS))
-    while checkDone(OCR_2_TL, OCR_2_BR):
-        chooseStrat = START_POINT
+    ml = 0
+    mr = 0
+    done = True
+
+
+    select_list = [START_POINT, SECOND_POINT, THIRD_POINT, FORTH_POINT]
+    lastChoice = 0
+    nowChoice = 0
+    while done:
+        for _ in range(OCR_MAX_ATTEMPTS):
+            mlast = ocr_read_left_right(OCR_2_TL, OCR_2_BR)
+            if mlast:
+                ml, mr = mlast
+                if ml == 0 or mr == 0:
+                    print("LIST CLEAR!!!")
+                    break
+                done = True
+                break
+            time.sleep(OCR_RETRY_SLEEP_MS / 1000)
+        if lastChoice != 0:
+            nowChoice = lastChoice - 2
+        elif ml >= SELECT_LIMIT:
+            nowChoice = SELECT_LIMIT - 1
+        else:
+            nowChoice = 0
+        lastChoice = nowChoice
         print("HANDLING...")
         if STOP:
             print("Stopped.")
@@ -434,13 +460,15 @@ def handling():
             print("[action3] gate not passed:", last)
             return
 
-        run_cliclick(c(chooseStrat), w(GAP_MS), c(CONFIRM), w(1000), c(CAILM), w(1500), c(CONFIRM), w(GAP_MS))
+        run_cliclick(c(select_list[nowChoice]), w(GAP_MS), c(CONFIRM), w(1000), c(CAILM), w(1500), c(CONFIRM), w(GAP_MS))
         add_crew()
         ops = []
         # ops += slow_drag(SLIDER_FROM, SLIDER_TO, steps=16, hold_ms=180, step_ms=45)
-        ops += [c(A3_AFTER_1), w(GAP_MS), c(CONFIRM)]
+        ops += [w(GAP_MS), c(A3_AFTER_1), w(GAP_MS), c(CONFIRM)]
         run_cliclick(*ops)
-        time.sleep(5)
+        print(ml)
+        if nowChoice == 0 and ml <= SELECT_LIMIT:
+            time.sleep(5)
 
 
 STOP = False
